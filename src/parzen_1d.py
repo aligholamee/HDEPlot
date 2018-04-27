@@ -17,7 +17,7 @@ NUM_SAMPLES = 100
 NUM_BINS = 20
 RANGE_LOW = 1
 RANGE_HIGH = 20
-BANDWIDTH = 1
+BANDWIDTH = 0.1
 
 # Density characteristics
 modal1_mean = 5
@@ -30,6 +30,7 @@ sample_set = np.concatenate((np.random.normal(modal1_mean, modal1_variance, int(
                             np.random.normal(modal2_mean, modal2_variance, int(0.7 * NUM_SAMPLES))))[:, np.newaxis]
 
 x_plot = np.linspace(RANGE_LOW, RANGE_HIGH, 1000)[:, np.newaxis]
+print(x_plot.shape)
 bins = np.linspace(RANGE_LOW, RANGE_HIGH, NUM_BINS)
 
 true_dens = (0.3 * norm(modal1_mean, modal1_variance).pdf(x_plot[:, 0])

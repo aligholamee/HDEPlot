@@ -7,48 +7,49 @@
 # ========================================
 
 import numpy as np
-import matplotlib.pyplot as pl
-import scipy.stats as st
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from sklearn.neighbors import KernelDensity
 
 # Seed the random number generator
 np.random.seed(1)
-NUM_SAMPLES = 500
+NUM_SAMPLES = 800
 NUM_BINS = 20
 RANGE_LOW = 1
 RANGE_HIGH = 20
-BANDWIDTH = 1
+BANDWIDTH = 0.2
 
 # Density characteristics
 MEAN = [10, 10]
 COV = [[5, 0], [0, 5]]
 
 
+def kde2D(x, y, bandwidth, xbins=100j, ybins=100j, **kwargs): 
+    """Build 2D kernel density estimate (KDE)."""
+
+    # create grid of sample locations (default: 100x100)
+    xx, yy = np.mgrid[x.min():x.max():xbins, 
+                      y.min():y.max():ybins]
+
+    xy_sample = np.vstack([yy.ravel(), xx.ravel()]).T
+    xy_train  = np.vstack([y, x]).T
+
+    kde_skl = KernelDensity(bandwidth=bandwidth, **kwargs)
+    kde_skl.fit(xy_train)
+
+    # score_samples() returns the log-likelihood of the samples
+    z = np.exp(kde_skl.score_samples(xy_sample))
+    return xx, yy, np.reshape(z, xx.shape)
+
+
 sample_set = np.random.multivariate_normal(MEAN, COV, NUM_SAMPLES)
-x = sample_set[:, 0]
-y = sample_set[:, 1]
 
-# Peform the kernel density estimate
-xx, yy = np.mgrid[RANGE_LOW:RANGE_HIGH:100j, RANGE_LOW:RANGE_HIGH:100j]
-positions = np.vstack([xx.ravel(), yy.ravel()])
-values = np.vstack([x, y])
-kernel = st.gaussian_kde(values)
-f = np.reshape(kernel(positions).T, xx.shape)
+xx, yy, zz = kde2D(sample_set[:, 0], sample_set[:, 1], BANDWIDTH)
 
-fig = pl.figure()
-ax = fig.gca()
-ax.set_xlim(RANGE_LOW, RANGE_HIGH)
-ax.set_ylim(RANGE_LOW, RANGE_HIGH)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
 
 # Actual Density Area
-cfset = ax.contourf(xx, yy, f, cmap='Blues', label='Input Distribution')
+ax.plot_surface(xx, yy, zz, facecolor='white')
 
-# Contour plots of Estimated
-cset = ax.contour(xx, yy, f, colors='k', label='Gaussian Windows Estimation')
-
-# Label plot
-ax.clabel(cset, inline=1, fontsize=10)
-
-ax.set_xlabel('Y1')
-ax.set_ylabel('Y0')
-
-pl.show()
+plt.show()
